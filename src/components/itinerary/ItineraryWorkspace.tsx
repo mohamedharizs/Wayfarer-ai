@@ -3,8 +3,8 @@
 import React, { useState } from 'react';
 import {
   MapPin, Calendar, DollarSign, Plus, Share2,
-  RefreshCw, Compass, CloudRain,
-  Layers, Map as MapIcon
+  RefreshCw, CloudRain,
+  Layers, Map as MapIcon, CheckCircle2
 } from 'lucide-react';
 import { Trip, Activity, ActualExpense } from '@/types/trip';
 import ActivityCard from './ActivityCard';
@@ -40,9 +40,19 @@ export default function ItineraryWorkspace({
   const [isAddActivityOpen, setIsAddActivityOpen] = useState(false);
   const [selectedMapActivityId, setSelectedMapActivityId] = useState<string | null>(null);
   const [isRegeneratingDay, setIsRegeneratingDay] = useState(false);
+  const [periodFilter, setPeriodFilter] = useState<'all' | 'morning' | 'afternoon' | 'evening'>('all');
 
   // Active day lookup
   const activeDay = trip.days.find(d => d.dayNumber === selectedDayNumber) || trip.days[0];
+
+  // Activities filtered by period
+  const filteredActivities = (activeDay?.activities || []).filter(a => {
+    if (periodFilter === 'all') return true;
+    return a.period === periodFilter;
+  });
+
+  const completedActivitiesCount = (activeDay?.activities || []).filter(a => a.isCompleted).length;
+  const totalDayActivitiesCount = activeDay?.activities?.length || 0;
 
   // Handler: Toggle complete activity
   const handleToggleComplete = (activityId: string) => {
@@ -134,10 +144,10 @@ export default function ItineraryWorkspace({
           {/* Top Bar on Banner */}
           <div className="absolute top-6 left-6 right-6 flex items-center justify-between no-print">
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold uppercase tracking-wider text-white">
+              <span className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-xs font-semibold uppercase tracking-wider text-white border border-white/20">
                 {trip.preferences?.budgetStyle || 'Curated'} Travel Style
               </span>
-              <span className="px-3 py-1 rounded-full bg-[#176B52] text-xs font-bold text-white">
+              <span className="px-3 py-1 rounded-full bg-[#176B52] text-xs font-bold text-white shadow-xs">
                 {trip.durationDays} Days Itinerary
               </span>
             </div>
@@ -145,15 +155,17 @@ export default function ItineraryWorkspace({
             {/* Quick Actions */}
             <div className="flex items-center gap-2">
               <button
+                type="button"
                 onClick={onOpenShareModal}
-                className="px-3.5 py-1.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 text-xs font-semibold transition-colors flex items-center gap-1.5 text-white cursor-pointer"
+                className="px-3.5 py-1.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/30 text-xs font-semibold transition-colors flex items-center gap-1.5 text-white cursor-pointer border border-white/20"
               >
                 <Share2 className="w-3.5 h-3.5" />
                 <span>Share & Export</span>
               </button>
               <button
+                type="button"
                 onClick={onOpenPlanner}
-                className="px-3.5 py-1.5 rounded-full bg-[#D6AD60] hover:bg-[#c49b4c] text-xs font-bold text-[#101827] transition-colors flex items-center gap-1.5 cursor-pointer"
+                className="px-3.5 py-1.5 rounded-full bg-[#D6AD60] hover:bg-[#c49b4c] text-xs font-bold text-[#101827] transition-colors flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <span>New Trip</span>
               </button>
@@ -162,9 +174,9 @@ export default function ItineraryWorkspace({
 
           {/* Bottom Content on Banner */}
           <div className="absolute bottom-6 left-6 right-6 space-y-2">
-            <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
+            <h2 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white">
               {trip.title}
-            </h1>
+            </h2>
             <p className="text-sm text-slate-300 max-w-2xl line-clamp-2">
               {trip.summary}
             </p>
@@ -189,13 +201,14 @@ export default function ItineraryWorkspace({
       </div>
 
       {/* View Switcher Tabs (Timeline / Map / Budget) */}
-      <div className="flex items-center justify-between gap-4 border-b border-[#E5E7EB] pb-3 no-print">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#E5E7EB] pb-3 no-print">
         <div className="flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setActiveView('timeline')}
             className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeView === 'timeline'
-                ? 'bg-[#101827] text-white shadow-2xs'
+                ? 'bg-[#101827] text-white shadow-xs'
                 : 'bg-white border border-[#E5E7EB] text-[#475569] hover:bg-slate-50'
             }`}
           >
@@ -203,10 +216,11 @@ export default function ItineraryWorkspace({
             <span>Day-by-Day Timeline</span>
           </button>
           <button
+            type="button"
             onClick={() => setActiveView('map')}
             className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeView === 'map'
-                ? 'bg-[#101827] text-white shadow-2xs'
+                ? 'bg-[#101827] text-white shadow-xs'
                 : 'bg-white border border-[#E5E7EB] text-[#475569] hover:bg-slate-50'
             }`}
           >
@@ -214,10 +228,11 @@ export default function ItineraryWorkspace({
             <span>Interactive Map</span>
           </button>
           <button
+            type="button"
             onClick={() => setActiveView('budget')}
             className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
               activeView === 'budget'
-                ? 'bg-[#101827] text-white shadow-2xs'
+                ? 'bg-[#101827] text-white shadow-xs'
                 : 'bg-white border border-[#E5E7EB] text-[#475569] hover:bg-slate-50'
             }`}
           >
@@ -227,8 +242,8 @@ export default function ItineraryWorkspace({
         </div>
 
         {/* Days count label */}
-        <span className="text-xs text-[#64748B] hidden sm:inline">
-          {trip.days.length} Total Days Planned
+        <span className="text-xs text-[#64748B]">
+          {trip.days.length} Total Days Planned · {completedActivitiesCount} of {totalDayActivitiesCount} done today
         </span>
       </div>
 
@@ -236,11 +251,12 @@ export default function ItineraryWorkspace({
       {activeView === 'timeline' && (
         <div className="space-y-6">
           {/* Day Selector Horizontal Strip */}
-          <div className="overflow-x-auto pb-2 flex items-center gap-3 no-print">
+          <div className="overflow-x-auto pb-2 flex items-center gap-3 no-print scrollbar-thin">
             {trip.days.map((day) => {
               const isSelected = day.dayNumber === selectedDayNumber;
               return (
                 <button
+                  type="button"
                   key={day.dayNumber}
                   onClick={() => setSelectedDayNumber(day.dayNumber)}
                   className={`px-4 py-3 rounded-2xl border text-left shrink-0 transition-all cursor-pointer ${
@@ -267,9 +283,16 @@ export default function ItineraryWorkspace({
           <div className="p-6 bg-white rounded-3xl border border-[#E5E7EB] shadow-2xs space-y-4">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-[#176B52] bg-[#DCE9DF] px-2.5 py-0.5 rounded-full">
-                  Day {activeDay?.dayNumber || 1} Schedule
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#176B52] bg-[#DCE9DF] px-2.5 py-0.5 rounded-full">
+                    Day {activeDay?.dayNumber || 1} Schedule
+                  </span>
+                  {activeDay?.date && (
+                    <span className="text-xs text-[#64748B] font-medium">
+                      {activeDay.date}
+                    </span>
+                  )}
+                </div>
                 <h3 className="font-serif text-2xl font-bold text-[#101827] mt-1.5">
                   {activeDay?.title || 'Daily Itinerary'}
                 </h3>
@@ -281,6 +304,7 @@ export default function ItineraryWorkspace({
               {/* Day Action Buttons */}
               <div className="flex items-center gap-2 no-print">
                 <button
+                  type="button"
                   onClick={handleRegenerateCurrentDay}
                   disabled={isRegeneratingDay}
                   className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-[#101827] transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
@@ -291,6 +315,7 @@ export default function ItineraryWorkspace({
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => setIsAddActivityOpen(true)}
                   className="px-4 py-2 rounded-xl bg-[#176B52] hover:bg-[#125440] text-xs font-semibold text-white transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
                 >
@@ -300,75 +325,96 @@ export default function ItineraryWorkspace({
               </div>
             </div>
 
-            {/* Weather & Practical Day Notice */}
+            {/* Weather Tip for the Day */}
             {activeDay?.weatherRecommendation && (
-              <div className="p-3 rounded-2xl bg-[#F8F7F3] border border-[#E5E7EB] text-xs text-[#475569] flex items-center gap-2">
+              <div className="p-3 bg-[#F8F7F3] rounded-xl border border-slate-200 text-xs text-[#475569] flex items-center gap-2">
                 <CloudRain className="w-4 h-4 text-[#176B52] shrink-0" />
-                <span>
-                  <strong>Local Conditions Note:</strong> {activeDay.weatherRecommendation}
-                </span>
+                <span><strong>Weather Note:</strong> {activeDay.weatherRecommendation}</span>
               </div>
             )}
+
+            {/* Period Filters (All / Morning / Afternoon / Evening) */}
+            <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 no-print">
+              <span className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider mr-2">
+                Filter:
+              </span>
+              {(['all', 'morning', 'afternoon', 'evening'] as const).map(p => (
+                <button
+                  type="button"
+                  key={p}
+                  onClick={() => setPeriodFilter(p)}
+                  className={`text-xs px-3 py-1 rounded-full font-medium capitalize transition-colors cursor-pointer ${
+                    periodFilter === p
+                      ? 'bg-[#101827] text-white'
+                      : 'bg-slate-100 text-[#475569] hover:bg-slate-200'
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
           </div>
 
-          {/* Activities Timeline List */}
-          <div className="space-y-4">
-            {(!activeDay?.activities || activeDay.activities.length === 0) ? (
-              <div className="p-12 text-center bg-white rounded-3xl border border-[#E5E7EB] space-y-3">
-                <p className="text-sm text-[#64748B]">No activities scheduled for this day.</p>
-                <button
-                  onClick={() => setIsAddActivityOpen(true)}
-                  className="px-4 py-2 rounded-xl bg-[#176B52] text-white text-xs font-semibold inline-flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add First Activity</span>
-                </button>
-              </div>
-            ) : (
-              activeDay.activities.map((activity, idx) => (
+          {/* Timeline Rail & Activity Cards */}
+          {filteredActivities.length === 0 ? (
+            <div className="p-12 text-center bg-white rounded-3xl border border-dashed border-[#E5E7EB] space-y-3">
+              <p className="text-sm text-[#64748B]">
+                No activities found for this time period.
+              </p>
+              <button
+                type="button"
+                onClick={() => setPeriodFilter('all')}
+                className="px-4 py-2 rounded-xl bg-[#176B52] text-white text-xs font-semibold"
+              >
+                Show All Activities
+              </button>
+            </div>
+          ) : (
+            <div className="relative sm:border-l-2 sm:border-[#DCE9DF] sm:ml-7 sm:pl-7 space-y-6">
+              {filteredActivities.map((act, idx) => (
                 <ActivityCard
-                  key={activity.id}
-                  activity={activity}
+                  key={act.id}
+                  activity={act}
                   isFirst={idx === 0}
-                  isLast={idx === activeDay.activities.length - 1}
-                  onToggleComplete={() => handleToggleComplete(activity.id)}
-                  onEdit={() => setEditingActivity(activity)}
-                  onDelete={() => handleDeleteActivity(activity.id)}
+                  isLast={idx === filteredActivities.length - 1}
+                  onToggleComplete={() => handleToggleComplete(act.id)}
+                  onEdit={() => setEditingActivity(act)}
+                  onDelete={() => handleDeleteActivity(act.id)}
                   onMoveUp={() => handleMoveActivity(idx, 'up')}
                   onMoveDown={() => handleMoveActivity(idx, 'down')}
                 />
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {/* Practical Tips & Rain Alternatives Footer Section */}
+          {/* Practical Tips & Alternatives for This Trip */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
             {/* Practical Tips */}
-            <div className="p-6 bg-white rounded-3xl border border-[#E5E7EB] space-y-3">
-              <h4 className="font-serif text-base font-bold text-[#101827] flex items-center gap-2">
-                <Compass className="w-4 h-4 text-[#176B52]" />
-                <span>Practical Travel Insights</span>
+            <div className="p-6 rounded-3xl bg-white border border-[#E5E7EB] shadow-2xs space-y-3">
+              <h4 className="font-serif text-lg font-bold text-[#101827] flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-[#176B52]" />
+                <span>Field-Tested Local Tips</span>
               </h4>
-              <ul className="space-y-2 text-xs text-[#475569]">
-                {trip.practicalTips?.map((tip, i) => (
+              <ul className="space-y-2 text-xs text-[#475569] leading-relaxed">
+                {trip.practicalTips.map((tip, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-[#176B52] font-bold">•</span>
+                    <span className="text-[#176B52] font-bold shrink-0">•</span>
                     <span>{tip}</span>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Bad Weather Alternatives */}
-            <div className="p-6 bg-white rounded-3xl border border-[#E5E7EB] space-y-3">
-              <h4 className="font-serif text-base font-bold text-[#101827] flex items-center gap-2">
-                <CloudRain className="w-4 h-4 text-[#D6AD60]" />
-                <span>Inclement Weather Alternatives</span>
+            {/* Inclement Weather Alternatives */}
+            <div className="p-6 rounded-3xl bg-white border border-[#E5E7EB] shadow-2xs space-y-3">
+              <h4 className="font-serif text-lg font-bold text-[#101827] flex items-center gap-2">
+                <CloudRain className="w-5 h-5 text-[#D6AD60]" />
+                <span>Rain & Weather Fallbacks</span>
               </h4>
-              <ul className="space-y-2 text-xs text-[#475569]">
-                {trip.weatherAlternatives?.map((alt, i) => (
+              <ul className="space-y-2 text-xs text-[#475569] leading-relaxed">
+                {trip.weatherAlternatives.map((alt, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-[#D6AD60] font-bold">•</span>
+                    <span className="text-[#D6AD60] font-bold shrink-0">•</span>
                     <span>{alt}</span>
                   </li>
                 ))}
@@ -380,14 +426,12 @@ export default function ItineraryWorkspace({
 
       {/* VIEW 2: MAP */}
       {activeView === 'map' && (
-        <div className="space-y-6">
-          <TripMap
-            activities={activeDay?.activities || []}
-            destinationName={trip.destination}
-            selectedActivityId={selectedMapActivityId}
-            onSelectActivity={(id) => setSelectedMapActivityId(id)}
-          />
-        </div>
+        <TripMap
+          activities={activeDay?.activities || []}
+          destinationName={trip.destination}
+          selectedActivityId={selectedMapActivityId}
+          onSelectActivity={(id) => setSelectedMapActivityId(id)}
+        />
       )}
 
       {/* VIEW 3: BUDGET */}
@@ -398,29 +442,38 @@ export default function ItineraryWorkspace({
           durationDays={trip.durationDays}
           onAddExpense={handleAddExpense}
           onUpdateBudget={(newBudget) => {
-            const updatedTrip = { ...trip, budget: newBudget };
-            saveTrip(updatedTrip);
-            onTripUpdated(updatedTrip);
+            const updated = { ...trip, budget: newBudget };
+            saveTrip(updated);
+            onTripUpdated(updated);
           }}
         />
       )}
 
       {/* Edit Activity Modal */}
-      <EditActivityModal
-        activity={editingActivity}
-        isOpen={!!editingActivity}
-        onClose={() => setEditingActivity(null)}
-        onSave={handleSaveActivity}
-      />
+      {editingActivity && (
+        <EditActivityModal
+          activity={editingActivity}
+          isOpen={true}
+          onClose={() => setEditingActivity(null)}
+          onSave={(updated) => {
+            handleSaveActivity(updated);
+            setEditingActivity(null);
+          }}
+        />
+      )}
 
       {/* Add Custom Activity Modal */}
-      <AddActivityModal
-        isOpen={isAddActivityOpen}
-        dayNumber={selectedDayNumber}
-        onClose={() => setIsAddActivityOpen(false)}
-        onAdd={handleAddActivity}
-      />
+      {isAddActivityOpen && (
+        <AddActivityModal
+          isOpen={true}
+          dayNumber={selectedDayNumber}
+          onClose={() => setIsAddActivityOpen(false)}
+          onAdd={(newAct) => {
+            handleAddActivity(newAct);
+            setIsAddActivityOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
-

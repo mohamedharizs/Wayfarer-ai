@@ -234,6 +234,25 @@ export default function PlannerWizard({
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-sm text-[#101827] focus:ring-2 focus:ring-[#176B52] focus:outline-hidden"
                     />
                   </div>
+
+                  {/* Quick Preset Pills */}
+                  <div className="flex items-center gap-1.5 flex-wrap pt-2.5">
+                    <span className="text-[11px] font-semibold text-[#64748B]">Suggestions:</span>
+                    {['Kyoto, Japan', 'Amalfi Coast, Italy', 'Swiss Alps, Switzerland', 'Oaxaca City, Mexico', 'Reykjavik, Iceland', 'Banff, Canada'].map((s) => (
+                      <button
+                        type="button"
+                        key={s}
+                        onClick={() => setDestination(s)}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${
+                          destination === s
+                            ? 'bg-[#176B52] text-white border-[#176B52]'
+                            : 'bg-white border-[#E5E7EB] text-[#475569] hover:bg-slate-100'
+                        }`}
+                      >
+                        {s.split(',')[0]}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
