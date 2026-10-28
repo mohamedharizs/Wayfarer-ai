@@ -246,6 +246,159 @@ export const SAMPLE_TRIPS: Trip[] = [
         ]
       }
     ]
+  },
+  {
+    id: 'sample-amalfi-5d',
+    title: '5 Days Mediterranean Odyssey in Amalfi',
+    destination: 'Amalfi Coast',
+    country: 'Italy',
+    coverImage: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=1200&q=80',
+    summary: 'Pastel cliffside villages, fresh handmade scialatielli pasta, lemon grove walks, and private coastal boat cruising across the Gulf of Salerno.',
+    startDate: '2026-06-12',
+    endDate: '2026-06-16',
+    durationDays: 5,
+    preferences: {
+      destination: 'Amalfi Coast, Italy',
+      departureCity: 'New York (JFK)',
+      startDate: '2026-06-12',
+      endDate: '2026-06-16',
+      durationDays: 5,
+      travelerType: 'couple',
+      adultsCount: 2,
+      childrenCount: 0,
+      budgetStyle: 'luxury',
+      totalBudget: 4200,
+      currency: 'USD',
+      interests: ['Food & Local Cuisine', 'Beaches & Coastal', 'Photography', 'Art & Architecture'],
+      pace: 'relaxed',
+      dietaryNeeds: 'No restrictions',
+      accommodationType: 'Cliffside Boutique Hotel',
+      transportPreference: 'Ferry Boats & Private Transfers',
+      specialInstructions: 'Ensure sunset dinner bookings in Positano.'
+    },
+    budget: {
+      flights: 1400,
+      accommodation: 1500,
+      food: 720,
+      transportation: 220,
+      activities: 260,
+      shopping: 100,
+      emergencyBuffer: 0,
+      totalPlanned: 4200,
+      currency: 'USD'
+    },
+    actualExpenses: [
+      { id: 'exp-a1', title: 'Hotel Sirenuse Deposit', amount: 750, category: 'accommodation', date: '2026-06-12' },
+      { id: 'exp-a2', title: 'Capri Day Boat Rental', amount: 240, category: 'activities', date: '2026-06-13' }
+    ],
+    practicalTips: [
+      'Travel by hydrofoil ferry rather than buses along the winding cliff roads to avoid motion sickness and traffic delays.',
+      'Book dinners at least 3 weeks in advance for terrace tables in Positano and Ravello.'
+    ],
+    weatherAlternatives: [
+      'If sea conditions are choppy, spend the day exploring Villa Cimbrone gardens and ceramic workshops in Vietri sul Mare.'
+    ],
+    createdAt: '2026-10-26T12:00:00Z',
+    updatedAt: '2026-10-28T09:00:00Z',
+    days: [
+      {
+        dayNumber: 1,
+        date: '2026-06-12',
+        title: 'Positano Arrival & Sunset Spritz',
+        theme: 'Coastal Romance',
+        dailyEstimatedCost: 160,
+        weatherRecommendation: 'Warm Mediterranean sun (26°C). Sunglasses & linen clothing recommended.',
+        activities: [
+          {
+            id: 'act-am-1',
+            name: 'Check-in & Terrace Welcome Drink',
+            time: '02:30 PM',
+            period: 'afternoon',
+            category: 'Relaxation',
+            description: 'Check into your sea-facing balcony suite overlooking the cascading pastel houses of Positano.',
+            duration: '1.5 hrs',
+            estimatedCost: 0,
+            location: { name: 'Positano Central Cliffs', lat: 40.6281, lng: 14.4850 },
+            insiderTip: 'Complimentary limoncello is served at the pool bar.',
+            isCompleted: true
+          },
+          {
+            id: 'act-am-2',
+            name: 'Sunset Aperitivo at Franco’s Bar',
+            time: '06:30 PM',
+            period: 'evening',
+            category: 'Nightlife',
+            description: 'Sip Campari spritz alongside panoramic vistas of the pastel town cascading into the deep blue sea.',
+            duration: '2.0 hrs',
+            estimatedCost: 50,
+            location: { name: 'Via Cristoforo Colombo, Positano', lat: 40.6295, lng: 14.4862 },
+            insiderTip: 'Arrive 30 minutes before sunset opening as they do not take reservations.',
+            isCompleted: false
+          },
+          {
+            id: 'act-am-3',
+            name: 'Seafood Scialatielli Dinner by the Beach',
+            time: '08:30 PM',
+            period: 'evening',
+            category: 'Food',
+            description: 'Fresh catch of clams, mussels, and calamari tossed with hand-rolled Campanian ribbon pasta.',
+            duration: '2.0 hrs',
+            estimatedCost: 110,
+            location: { name: 'Spiaggia Grande, Positano', lat: 40.6278, lng: 14.4845 },
+            insiderTip: 'Ask for lemon sorbet served directly inside a fresh chilled Amalfi lemon.',
+            bookingRequired: true,
+            isCompleted: false
+          }
+        ]
+      },
+      {
+        dayNumber: 2,
+        date: '2026-06-13',
+        title: 'Ravello Heights & Villa Rufolo Gardens',
+        theme: 'Classical Art & Serenity',
+        dailyEstimatedCost: 95,
+        weatherRecommendation: 'Pleasant mountain breezes (24°C). Walking shoes recommended for cobblestones.',
+        activities: [
+          {
+            id: 'act-am-4',
+            name: 'Scenic Drive to Mount Lattari & Ravello',
+            time: '09:30 AM',
+            period: 'morning',
+            category: 'Sightseeing',
+            description: 'Ascend 365 meters above the sea into the historic peaceful sanctuary of Ravello.',
+            duration: '1.0 hr',
+            estimatedCost: 25,
+            location: { name: 'Ravello Town Square', lat: 40.6492, lng: 14.6117 },
+            isCompleted: false
+          },
+          {
+            id: 'act-am-5',
+            name: 'Villa Rufolo Gardens & Infinity Terrace',
+            time: '11:00 AM',
+            period: 'morning',
+            category: 'Nature',
+            description: 'Wander through exotic pines and flowerbeds framing the iconic twin-domed chapel and endless sea.',
+            duration: '2.0 hrs',
+            estimatedCost: 12,
+            location: { name: 'Piazza Vescovado, Ravello', lat: 40.6488, lng: 14.6120 },
+            insiderTip: 'Wagner composed parts of Parsifal here in 1880.',
+            isCompleted: false
+          },
+          {
+            id: 'act-am-6',
+            name: 'Farm-to-Table Lunch in Lemon Grove',
+            time: '01:30 PM',
+            period: 'afternoon',
+            category: 'Food',
+            description: 'Dine under a shaded canopy of fragrant sfusato amalfitano lemons, enjoying homemade ricotta and gnocchi.',
+            duration: '2.0 hrs',
+            estimatedCost: 58,
+            location: { name: 'Lemon Garden Trattoria, Ravello', lat: 40.6475, lng: 14.6105 },
+            bookingRequired: true,
+            isCompleted: false
+          }
+        ]
+      }
+    ]
   }
 ];
-

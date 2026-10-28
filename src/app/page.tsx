@@ -21,7 +21,33 @@ import {
   setActiveTripId,
   addActualExpense
 } from '@/lib/storage';
-import { Bookmark } from 'lucide-react';
+import {
+  Bookmark, MapPin, ChevronDown,
+  Route, RefreshCw, Printer, DollarSign, CloudSun
+} from 'lucide-react';
+
+const FAQ_ITEMS = [
+  {
+    q: 'How does Wayfarer AI estimate trip budgets?',
+    a: 'Wayfarer AI models realistic expenditure using localized cost indices for lodging, regional dining, and ticket admissions. Calculations adapt dynamically to your selected travel style (Economy, Comfortable, or Luxury) and traveler headcount.'
+  },
+  {
+    q: 'Can I regenerate or swap out individual days without starting over?',
+    a: 'Yes. Each day in your itinerary features a dedicated "Regenerate Day" button. This rerolls the specific day’s sights and dining recommendations based on your preferences without altering the rest of your vacation schedule.'
+  },
+  {
+    q: 'How does the interactive route map work?',
+    a: 'Every scheduled morning, afternoon, and evening waypoint is assigned accurate coordinates. You can select individual pins to view activity summaries and launch turn-by-turn navigation directly in Google Maps or OpenStreetMap.'
+  },
+  {
+    q: 'Can I print or save a PDF version for my flight?',
+    a: 'Absolutely. Use the "Share & Export" button to generate a clean, distraction-free printable document with buttons and sidebars hidden automatically via our custom @media print stylesheet.'
+  },
+  {
+    q: 'Does Wayfarer AI book tickets or reservations directly?',
+    a: 'Wayfarer AI is an intelligent itinerary planner. While we provide direct links, estimated ticket prices, and booking notices for high-demand sights, reservations are finalized directly with venues and verified airlines.'
+  }
+];
 
 export default function Home() {
   // Lazy state initializers read from storage without triggering cascading renders in effect
@@ -44,6 +70,7 @@ export default function Home() {
   });
 
   const [activeTab, setActiveTab] = useState<'itinerary' | 'discover' | 'budget'>('itinerary');
+  const [openFaqIdx, setOpenFaqIdx] = useState<number | null>(0);
 
   // Modals state
   const [isPlannerOpen, setIsPlannerOpen] = useState(false);
@@ -156,7 +183,7 @@ export default function Home() {
           {/* TAB 1: ITINERARY WORKSPACE */}
           {activeTab === 'itinerary' && (
             <div id="itinerary" className="space-y-12">
-              <div className="flex items-center justify-between border-b border-[#E5E7EB] pb-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-[#E5E7EB] pb-4 gap-4">
                 <div>
                   <h2 className="font-serif text-2xl sm:text-3xl font-bold text-[#101827]">
                     Active Journey Workspace
@@ -167,12 +194,30 @@ export default function Home() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  {/* Quick sample trip switcher pills */}
+                  <div className="hidden lg:flex items-center gap-1.5 mr-2">
+                    <span className="text-xs font-semibold text-[#64748B]">Preview:</span>
+                    {SAMPLE_TRIPS.map((st) => (
+                      <button
+                        key={st.id}
+                        onClick={() => handleSelectTrip(st.id)}
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium transition-colors cursor-pointer ${
+                          activeTrip.id === st.id
+                            ? 'bg-[#176B52] text-white'
+                            : 'bg-white border border-[#E5E7EB] text-[#475569] hover:bg-slate-100'
+                        }`}
+                      >
+                        {st.destination}
+                      </button>
+                    ))}
+                  </div>
+
                   <button
                     onClick={() => setIsSavedTripsOpen(true)}
                     className="px-3.5 py-1.5 rounded-xl bg-white border border-[#E5E7EB] text-xs font-semibold hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
                     <Bookmark className="w-3.5 h-3.5 text-[#176B52]" />
-                    <span>Switch Trip ({trips.length})</span>
+                    <span>Saved Trips ({trips.length})</span>
                   </button>
                 </div>
               </div>
@@ -236,8 +281,105 @@ export default function Home() {
           )}
         </section>
 
+        {/* Core Capabilities & Features Section */}
+        <section className="py-20 bg-white border-y border-[#E5E7EB]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-3xl mx-auto space-y-3 mb-16">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#176B52] bg-[#DCE9DF] px-3.5 py-1 rounded-full">
+                Platform Architecture
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#101827]">
+                Engineered for Meaningful Exploration
+              </h2>
+              <p className="text-sm sm:text-base text-[#64748B]">
+                Travel planning should feel exhilarating, not like spreadsheet bookkeeping. Wayfarer AI connects schedule logic, regional pricing, and cartography into one cohesive workspace.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {/* Feature 1 */}
+              <div className="p-8 rounded-3xl bg-[#F8F7F3] border border-[#E5E7EB] space-y-3 hover:border-slate-300 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-[#176B52]/10 text-[#176B52] flex items-center justify-center">
+                  <Route className="w-6 h-6 text-[#176B52]" />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#101827]">
+                  Geographic Clustering
+                </h3>
+                <p className="text-sm text-[#475569] leading-relaxed">
+                  Morning, afternoon, and evening sights are clustered within logical walking or transit radii so you spend less time in transit and more time enjoying.
+                </p>
+              </div>
+
+              {/* Feature 2 */}
+              <div className="p-8 rounded-3xl bg-[#F8F7F3] border border-[#E5E7EB] space-y-3 hover:border-slate-300 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-[#D6AD60]/20 text-[#D6AD60] flex items-center justify-center">
+                  <DollarSign className="w-6 h-6 text-[#101827]" />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#101827]">
+                  Itemized Cost Modeling
+                </h3>
+                <p className="text-sm text-[#475569] leading-relaxed">
+                  Transparent estimations categorized into flights, lodging, regional dining, and museum entry passes, with real expense tracking.
+                </p>
+              </div>
+
+              {/* Feature 3 */}
+              <div className="p-8 rounded-3xl bg-[#F8F7F3] border border-[#E5E7EB] space-y-3 hover:border-slate-300 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-[#101827]/10 text-[#101827] flex items-center justify-center">
+                  <RefreshCw className="w-6 h-6 text-[#176B52]" />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#101827]">
+                  Single-Day Regeneration
+                </h3>
+                <p className="text-sm text-[#475569] leading-relaxed">
+                  Dissatisfied with a specific day? Refresh that day independently with alternative cultural spots while preserving the remainder of your trip.
+                </p>
+              </div>
+
+              {/* Feature 4 */}
+              <div className="p-8 rounded-3xl bg-[#F8F7F3] border border-[#E5E7EB] space-y-3 hover:border-slate-300 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-[#176B52]/10 text-[#176B52] flex items-center justify-center">
+                  <CloudSun className="w-6 h-6 text-[#176B52]" />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#101827]">
+                  Inclement Weather Readiness
+                </h3>
+                <p className="text-sm text-[#475569] leading-relaxed">
+                  Every curated journey includes indoor fallback attractions, covered food halls, and artisan workshops should rain disrupt outdoor plans.
+                </p>
+              </div>
+
+              {/* Feature 5 */}
+              <div className="p-8 rounded-3xl bg-[#F8F7F3] border border-[#E5E7EB] space-y-3 hover:border-slate-300 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-[#D6AD60]/20 text-[#D6AD60] flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-[#101827]" />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#101827]">
+                  Live Coordinates & Map
+                </h3>
+                <p className="text-sm text-[#475569] leading-relaxed">
+                  Interactive waypoint cards link directly to real coordinates and external mapping providers for seamless navigation on mobile.
+                </p>
+              </div>
+
+              {/* Feature 6 */}
+              <div className="p-8 rounded-3xl bg-[#F8F7F3] border border-[#E5E7EB] space-y-3 hover:border-slate-300 transition-all">
+                <div className="w-12 h-12 rounded-2xl bg-[#101827]/10 text-[#101827] flex items-center justify-center">
+                  <Printer className="w-6 h-6 text-[#176B52]" />
+                </div>
+                <h3 className="font-serif text-xl font-bold text-[#101827]">
+                  Print-Ready & PDF Export
+                </h3>
+                <p className="text-sm text-[#475569] leading-relaxed">
+                  Export structured JSON data or print clean offline itineraries formatted specifically for physical travel binders and in-flight reading.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Editorial Guide: How Wayfarer AI Works */}
-        <section className="py-16 bg-white border-y border-[#E5E7EB]">
+        <section className="py-16 bg-[#F8F7F3]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
               <span className="text-xs font-bold uppercase tracking-wider text-[#176B52] bg-[#DCE9DF] px-3 py-1 rounded-full">
@@ -253,7 +395,7 @@ export default function Home() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {/* Step 1 */}
-              <div className="p-8 rounded-3xl bg-[#F8F7F3] border border-[#E5E7EB] space-y-4">
+              <div className="p-8 rounded-3xl bg-white border border-[#E5E7EB] shadow-2xs space-y-4">
                 <div className="w-12 h-12 rounded-2xl bg-[#176B52] text-white flex items-center justify-center font-serif text-xl font-bold">
                   01
                 </div>
@@ -266,7 +408,7 @@ export default function Home() {
               </div>
 
               {/* Step 2 */}
-              <div className="p-8 rounded-3xl bg-[#F8F7F3] border border-[#E5E7EB] space-y-4">
+              <div className="p-8 rounded-3xl bg-white border border-[#E5E7EB] shadow-2xs space-y-4">
                 <div className="w-12 h-12 rounded-2xl bg-[#101827] text-white flex items-center justify-center font-serif text-xl font-bold">
                   02
                 </div>
@@ -279,7 +421,7 @@ export default function Home() {
               </div>
 
               {/* Step 3 */}
-              <div className="p-8 rounded-3xl bg-[#F8F7F3] border border-[#E5E7EB] space-y-4">
+              <div className="p-8 rounded-3xl bg-white border border-[#E5E7EB] shadow-2xs space-y-4">
                 <div className="w-12 h-12 rounded-2xl bg-[#D6AD60] text-[#101827] flex items-center justify-center font-serif text-xl font-bold">
                   03
                 </div>
@@ -290,6 +432,48 @@ export default function Home() {
                   Regenerate single days, reorder stops, log real expenses, share clean web links, or export formatted travel PDFs.
                 </p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Traveler FAQs Accordion */}
+        <section className="py-20 bg-white border-t border-[#E5E7EB]">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+            <div className="text-center space-y-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#176B52] bg-[#DCE9DF] px-3 py-1 rounded-full">
+                Traveler Knowledge Base
+              </span>
+              <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#101827]">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-sm text-[#64748B]">
+                Everything you need to know about planning journeys with Wayfarer AI.
+              </p>
+            </div>
+
+            <div className="space-y-4 pt-4">
+              {FAQ_ITEMS.map((item, idx) => {
+                const isOpen = openFaqIdx === idx;
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-2xl border border-[#E5E7EB] bg-[#F8F7F3] overflow-hidden transition-all"
+                  >
+                    <button
+                      onClick={() => setOpenFaqIdx(isOpen ? null : idx)}
+                      className="w-full p-5 text-left flex items-center justify-between gap-4 font-serif font-bold text-base text-[#101827] hover:bg-slate-100 transition-colors cursor-pointer"
+                    >
+                      <span>{item.q}</span>
+                      <ChevronDown className={`w-5 h-5 text-[#176B52] transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isOpen && (
+                      <div className="px-5 pb-5 pt-1 text-sm text-[#475569] leading-relaxed border-t border-slate-200/60">
+                        {item.a}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
