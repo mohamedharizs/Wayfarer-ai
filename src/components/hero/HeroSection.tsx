@@ -201,3 +201,4 @@ export default function HeroSection({ onStartPlanning, onExploreDestinations }: 
     </section>
   );
 }
+

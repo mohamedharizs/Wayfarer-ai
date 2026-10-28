@@ -139,3 +139,4 @@ export default function ShareExportModal({ isOpen, trip, onClose }: ShareExportM
     </div>
   );
 }
+

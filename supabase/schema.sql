@@ -136,3 +136,4 @@ CREATE POLICY "Users can manage expenses of their own trips"
       AND trips.user_id = auth.uid()
     )
   );
+

@@ -248,3 +248,4 @@ export const SAMPLE_TRIPS: Trip[] = [
     ]
   }
 ];
+

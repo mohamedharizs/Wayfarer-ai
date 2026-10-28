@@ -110,3 +110,4 @@ export const CURATED_DESTINATIONS: Destination[] = [
     lng: -115.5708
   }
 ];
+

@@ -379,3 +379,4 @@ export function AddActivityModal({ isOpen, dayNumber, onClose, onAdd }: AddActiv
     </div>
   );
 }
+
