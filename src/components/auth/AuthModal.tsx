@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Lock, Mail, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Lock, Mail, Sparkles, CheckCircle2, AlertCircle, Database } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -33,12 +33,12 @@ export default function AuthModal({
     setIsLoading(true);
     setMessage(null);
 
-    // Simulate safe auth login or Supabase connection
+    // Explicit transparent local session handling
     setTimeout(() => {
       setIsLoading(false);
-      onLoginSuccess(email);
+      onLoginSuccess(email.trim());
       onClose();
-    }, 600);
+    }, 400);
   };
 
   const handleDemoLogin = () => {
@@ -57,16 +57,31 @@ export default function AuthModal({
             </div>
             <div>
               <h3 className="font-serif text-lg font-bold text-[#101827]">
-                {userEmail ? 'Traveler Account' : isSignUp ? 'Create an Account' : 'Sign In to Wayfarer AI'}
+                {userEmail ? 'Traveler Session' : isSignUp ? 'Create Traveler Account' : 'Sign In to Wayfarer AI'}
               </h3>
               <p className="text-xs text-[#64748B]">
-                {userEmail ? 'Manage your account session' : 'Sync itineraries across all your devices'}
+                {userEmail ? 'Active local guest session' : 'Sync your personalized itineraries'}
               </p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded-full text-slate-400 hover:text-slate-700">
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1 rounded-full text-slate-400 hover:text-slate-700 cursor-pointer"
+          >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Cloud Authentication Architecture Notice */}
+        <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-[#475569] space-y-1">
+          <div className="flex items-center gap-1.5 font-semibold text-[#101827]">
+            <Database className="w-3.5 h-3.5 text-[#176B52]" />
+            <span>Environment Status: Local Storage Mode</span>
+          </div>
+          <p className="text-[11px] leading-relaxed text-[#64748B]">
+            Cloud Supabase credentials are not connected in this environment. Your journeys are saved securely in browser storage.
+          </p>
         </div>
 
         {userEmail ? (
@@ -81,17 +96,18 @@ export default function AuthModal({
             </div>
 
             <p className="text-xs text-[#64748B] leading-relaxed">
-              Your trips and preference settings are synced locally and backed up to your browser cache.
+              Your trips and custom preferences are stored locally in your browser cache.
             </p>
 
             <button
+              type="button"
               onClick={() => {
                 onSignOut();
                 onClose();
               }}
-              className="w-full py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition-colors"
+              className="w-full py-2.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 text-xs font-semibold hover:bg-rose-100 transition-colors cursor-pointer"
             >
-              Sign Out
+              Sign Out Session
             </button>
           </div>
         ) : (
@@ -141,9 +157,9 @@ export default function AuthModal({
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-2.5 rounded-xl bg-[#101827] text-white font-semibold text-xs hover:bg-[#1f2937] transition-all disabled:opacity-50"
+              className="w-full py-2.5 rounded-xl bg-[#101827] text-white font-semibold text-xs hover:bg-[#1f2937] transition-all disabled:opacity-50 cursor-pointer"
             >
-              {isLoading ? 'Authenticating...' : isSignUp ? 'Create Free Account' : 'Sign In'}
+              {isLoading ? 'Setting up session...' : isSignUp ? 'Create Traveler Session' : 'Sign In'}
             </button>
 
             {/* Quick Demo Mode Button */}
@@ -157,10 +173,10 @@ export default function AuthModal({
               <button
                 type="button"
                 onClick={handleDemoLogin}
-                className="w-full py-2.5 rounded-xl bg-[#DCE9DF] hover:bg-[#c9ddcd] text-[#176B52] font-semibold text-xs transition-colors flex items-center justify-center gap-1.5"
+                className="w-full py-2.5 rounded-xl bg-[#DCE9DF] hover:bg-[#c9ddcd] text-[#176B52] font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Continue in Local Demo Mode</span>
+                <Sparkles className="w-3.5 h-3.5 text-[#176B52]" />
+                <span>Continue as Guest Traveler</span>
               </button>
             </div>
 
@@ -169,9 +185,9 @@ export default function AuthModal({
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-xs text-[#176B52] hover:underline font-semibold"
+                className="text-xs text-[#176B52] hover:underline font-semibold cursor-pointer"
               >
-                {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
+                {isSignUp ? 'Already have a session? Sign in' : "New traveler? Set up profile"}
               </button>
             </div>
           </form>

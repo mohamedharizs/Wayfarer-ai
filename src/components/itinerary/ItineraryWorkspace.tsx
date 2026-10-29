@@ -12,6 +12,7 @@ import { EditActivityModal, AddActivityModal } from './ActivityModals';
 import TripMap from '../map/TripMap';
 import BudgetPlanner from '../budget/BudgetPlanner';
 import { generateSingleDay, getDestinationGeo } from '@/lib/ai-generator';
+import { formatCurrency } from '@/lib/currency';
 import {
   saveTrip,
   toggleActivityCompleted,
@@ -193,7 +194,7 @@ export default function ItineraryWorkspace({
               </div>
               <div className="flex items-center gap-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Est. Budget: ${trip.budget?.totalPlanned?.toLocaleString() || 0} USD</span>
+                <span>Est. Budget: {formatCurrency(trip.budget?.totalPlanned, trip.budget?.currency || 'INR')}</span>
               </div>
             </div>
           </div>
@@ -297,7 +298,7 @@ export default function ItineraryWorkspace({
                   {activeDay?.title || 'Daily Itinerary'}
                 </h3>
                 <p className="text-xs text-[#64748B] mt-0.5">
-                  Theme: {activeDay?.theme} · Estimated Day Cost: ${activeDay?.dailyEstimatedCost || 0}
+                  Theme: {activeDay?.theme} · Estimated Day Cost: {formatCurrency(activeDay?.dailyEstimatedCost, trip.budget?.currency || 'INR')}
                 </p>
               </div>
 
@@ -375,6 +376,7 @@ export default function ItineraryWorkspace({
                 <ActivityCard
                   key={act.id}
                   activity={act}
+                  currency={trip.budget?.currency || 'INR'}
                   isFirst={idx === 0}
                   isLast={idx === filteredActivities.length - 1}
                   onToggleComplete={() => handleToggleComplete(act.id)}

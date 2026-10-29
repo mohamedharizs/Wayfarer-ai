@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Sparkles, Calendar, Users, MapPin, ArrowRight, Compass, Star, Sun, ShieldCheck } from 'lucide-react';
 import { CURATED_DESTINATIONS } from '@/data/destinations';
+import { formatCurrency } from '@/lib/currency';
 
 interface HeroSectionProps {
   onStartPlanning: (initialData?: {
@@ -137,7 +138,7 @@ export default function HeroSection({ onStartPlanning, onExploreDestinations }: 
               {/* Card Footer highlights */}
               <div className="p-4 bg-white flex items-center justify-between text-xs border-t border-slate-100">
                 <div className="flex items-center gap-3 text-[#64748B]">
-                  <span className="font-semibold text-[#101827]">$140/day est.</span>
+                  <span className="font-semibold text-[#101827]">{formatCurrency(12000, 'INR')}/day est.</span>
                   <span>·</span>
                   <span>4 Highlights Scheduled</span>
                 </div>

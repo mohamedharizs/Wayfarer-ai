@@ -6,7 +6,8 @@
     "dev": "NEXT_TEST_WASM=1 next dev -p 3001 --webpack",
     "build": "NEXT_TEST_WASM=1 next build --webpack",
     "start": "NEXT_TEST_WASM=1 next start -p 3001",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --experimental-strip-types --test tests/**/*.test.ts"
   },
   "dependencies": {
     "@next/swc-wasm-nodejs": "^16.4.3",

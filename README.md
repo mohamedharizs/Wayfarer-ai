@@ -10,6 +10,11 @@
 1. **Travel-Editorial Brand Identity**
    - Color palette: Midnight Navy (`#101827`), Warm Off-white (`#F8F7F3`), Forest Green (`#176B52`), Soft Sage (`#DCE9DF`), and Muted Gold (`#D6AD60`).
    - Clean visual hierarchy, typography, and card consistency.
+2. **First-Class Indian Rupee (INR ₹) Default Currency**
+   - Indian numbering system formatting (e.g. ₹1,25,000, ₹2,60,000) using `Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 })`.
+   - Multi-currency architecture supporting USD, EUR, GBP, and JPY while defaulting strictly to INR.
+   - Realistic market pricing in INR for destinations, activities, and budget brackets rather than naive 1:1 conversions.
+   - Strict separation of numeric amounts from formatted presentation strings.
 2. **Interactive Hero & Search Bar**
    - Destination presets (Kyoto, Amalfi Coast, Swiss Alps, Oaxaca, Banff).
    - Instant search with departure city, duration, travelers, and budget style.
@@ -80,13 +85,19 @@ npx next dev -p 3000
 npx next dev -p 3001
 ```
 
-### 3. Run Quality & Type Checks
+### 3. Run Quality, Type & Unit Test Checks
 ```bash
-# Check TypeScript types
+# Run unit test suite (currency, validation, budget arithmetic, AI schema)
+npm test
+
+# Check TypeScript types (strict mode)
 npx tsc --noEmit
 
 # Run ESLint
 npm run lint
+
+# Build production bundle
+npm run build
 ```
 
 ---

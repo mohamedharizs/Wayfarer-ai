@@ -3,11 +3,12 @@
 import React, { useState } from 'react';
 import {
   MapPin, DollarSign,
-  ArrowRight, ArrowLeft, Sparkles, X, Loader2
+  ArrowRight, ArrowLeft, Sparkles, X, Loader2, AlertCircle
 } from 'lucide-react';
 import { Trip, TripPreferences, TravelStyle, TravelPace, TravelerType } from '@/types/trip';
 import { generateStructuredItinerary } from '@/lib/ai-generator';
 import { saveTrip } from '@/lib/storage';
+import { formatCurrency, calculateDefaultBudgetINR } from '@/lib/currency';
 
 interface PlannerWizardProps {
   isOpen: boolean;
@@ -44,10 +45,11 @@ export default function PlannerWizard({
   const [currentStep, setCurrentStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState('Analyzing regional highlights...');
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   // Form State
   const [destination, setDestination] = useState(initialData?.destination || 'Kyoto, Japan');
-  const [departureCity, setDepartureCity] = useState(initialData?.departureCity || 'San Francisco (SFO)');
+  const [departureCity, setDepartureCity] = useState(initialData?.departureCity || 'New Delhi (DEL)');
   const [durationDays, setDurationDays] = useState(initialData?.durationDays || 7);
   const [startDate, setStartDate] = useState('2026-11-10');
   const [flexibleDates, setFlexibleDates] = useState(false);
@@ -59,8 +61,10 @@ export default function PlannerWizard({
   const [childrenCount, setChildrenCount] = useState(0);
 
   const [budgetStyle, setBudgetStyle] = useState<TravelStyle>(initialData?.budgetStyle || 'comfortable');
-  const [totalBudget, setTotalBudget] = useState(2800);
-  const [currency, setCurrency] = useState('USD');
+  const [currency, setCurrency] = useState('INR');
+  const [totalBudget, setTotalBudget] = useState(() =>
+    calculateDefaultBudgetINR(initialData?.durationDays || 7, initialData?.travelers || 2, initialData?.budgetStyle || 'comfortable')
+  );
 
   const [selectedInterests, setSelectedInterests] = useState<string[]>([
     'Culture & History',
@@ -77,6 +81,7 @@ export default function PlannerWizard({
   if (!isOpen) return null;
 
   const toggleInterest = (id: string) => {
+    setValidationError(null);
     if (selectedInterests.includes(id)) {
       if (selectedInterests.length > 1) {
         setSelectedInterests(selectedInterests.filter(i => i !== id));
@@ -96,11 +101,71 @@ export default function PlannerWizard({
     }
   };
 
+  const validateStep = (step: number): boolean => {
+    setValidationError(null);
+    if (step === 1) {
+      if (!destination.trim() || destination.trim().length < 2) {
+        setValidationError('Please enter a valid destination city or region.');
+        return false;
+      }
+    } else if (step === 2) {
+      if (!startDate) {
+        setValidationError('Please select a valid departure date.');
+        return false;
+      }
+      const today = new Date().toISOString().split('T')[0];
+      if (startDate < today) {
+        setValidationError('Departure date cannot be in the past.');
+        return false;
+      }
+      if (durationDays < 1 || durationDays > 30) {
+        setValidationError('Duration must be between 1 and 30 days.');
+        return false;
+      }
+    } else if (step === 3) {
+      if (adultsCount < 1) {
+        setValidationError('At least 1 adult traveler is required.');
+        return false;
+      }
+      if (childrenCount < 0) {
+        setValidationError('Children count cannot be negative.');
+        return false;
+      }
+    } else if (step === 4) {
+      if (totalBudget <= 0 || isNaN(totalBudget)) {
+        setValidationError('Please enter a valid budget amount.');
+        return false;
+      }
+      const minBudget = currency === 'INR' ? 5000 : 100;
+      if (totalBudget < minBudget) {
+        setValidationError(`Minimum recommended budget is ${formatCurrency(minBudget, currency)}.`);
+        return false;
+      }
+    } else if (step === 5) {
+      if (selectedInterests.length === 0) {
+        setValidationError('Please select at least one travel interest.');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => prev + 1);
+    }
+  };
+
   const handleGenerate = async () => {
+    if (!validateStep(currentStep)) return;
+    if (isGenerating) return; // Prevent duplicate submissions
+
     setIsGenerating(true);
+    setValidationError(null);
+
     const messages = [
       'Analyzing destination highlights & neighborhood pacing...',
-      'Curating morning, afternoon, and evening activities...',
+      'Curating morning, afternoon, and evening activities in INR...',
       'Matching authentic local food & cultural experiences...',
       'Calculating realistic itemized budget estimates...',
       'Finalizing your customized travel itinerary...'
@@ -115,8 +180,8 @@ export default function PlannerWizard({
     const calculatedEndDate = calculateEndDate(startDate, durationDays);
 
     const preferences: TripPreferences = {
-      destination,
-      departureCity,
+      destination: destination.trim(),
+      departureCity: departureCity.trim() || undefined,
       startDate,
       endDate: calculatedEndDate,
       durationDays,
@@ -131,7 +196,7 @@ export default function PlannerWizard({
       dietaryNeeds,
       accommodationType,
       transportPreference,
-      specialInstructions
+      specialInstructions: specialInstructions.trim() || undefined
     };
 
     try {
@@ -190,6 +255,7 @@ export default function PlannerWizard({
             </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
             className="p-2 rounded-full hover:bg-slate-100 text-slate-500 hover:text-slate-800 transition-colors cursor-pointer"
           >
@@ -204,6 +270,14 @@ export default function PlannerWizard({
             style={{ width: `${progressPct}%` }}
           />
         </div>
+
+        {/* Validation Error Banner */}
+        {validationError && (
+          <div className="px-6 py-3 bg-rose-50 border-b border-rose-200 text-rose-800 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <span>{validationError}</span>
+          </div>
+        )}
 
         {/* Wizard Body Content */}
         <div className="p-6 sm:p-8 max-h-[70vh] overflow-y-auto">
@@ -229,7 +303,10 @@ export default function PlannerWizard({
                     <input
                       type="text"
                       value={destination}
-                      onChange={(e) => setDestination(e.target.value)}
+                      onChange={(e) => {
+                        setDestination(e.target.value);
+                        setValidationError(null);
+                      }}
                       placeholder="e.g. Kyoto, Japan or Amalfi Coast, Italy"
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-sm text-[#101827] focus:ring-2 focus:ring-[#176B52] focus:outline-hidden"
                     />
@@ -242,7 +319,10 @@ export default function PlannerWizard({
                       <button
                         type="button"
                         key={s}
-                        onClick={() => setDestination(s)}
+                        onClick={() => {
+                          setDestination(s);
+                          setValidationError(null);
+                        }}
                         className={`text-xs px-2.5 py-1 rounded-full border transition-colors cursor-pointer ${
                           destination === s
                             ? 'bg-[#176B52] text-white border-[#176B52]'
@@ -265,7 +345,7 @@ export default function PlannerWizard({
                       type="text"
                       value={departureCity}
                       onChange={(e) => setDepartureCity(e.target.value)}
-                      placeholder="e.g. London Heathrow (LHR) or New York (JFK)"
+                      placeholder="e.g. New Delhi (DEL) or Mumbai (BOM)"
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-sm text-[#101827] focus:ring-2 focus:ring-[#176B52] focus:outline-hidden"
                     />
                   </div>
@@ -295,7 +375,10 @@ export default function PlannerWizard({
                     <input
                       type="date"
                       value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
+                      onChange={(e) => {
+                        setStartDate(e.target.value);
+                        setValidationError(null);
+                      }}
                       className="w-full px-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-sm text-[#101827] focus:ring-2 focus:ring-[#176B52] focus:outline-hidden"
                     />
                   </div>
@@ -309,7 +392,11 @@ export default function PlannerWizard({
                       min="2"
                       max="14"
                       value={durationDays}
-                      onChange={(e) => setDurationDays(parseInt(e.target.value, 10))}
+                      onChange={(e) => {
+                        const days = parseInt(e.target.value, 10);
+                        setDurationDays(days);
+                        setTotalBudget(calculateDefaultBudgetINR(days, adultsCount + childrenCount, budgetStyle));
+                      }}
                       className="w-full accent-[#176B52] mt-3 cursor-pointer"
                     />
                     <div className="flex justify-between text-xs text-[#64748B] mt-1">
@@ -356,13 +443,18 @@ export default function PlannerWizard({
                     type="button"
                     onClick={() => {
                       setTravelerType(type);
+                      let newAdults = adultsCount;
+                      let newChildren = childrenCount;
                       if (type === 'solo') {
-                        setAdultsCount(1);
-                        setChildrenCount(0);
+                        newAdults = 1;
+                        newChildren = 0;
                       } else if (type === 'couple') {
-                        setAdultsCount(2);
-                        setChildrenCount(0);
+                        newAdults = 2;
+                        newChildren = 0;
                       }
+                      setAdultsCount(newAdults);
+                      setChildrenCount(newChildren);
+                      setTotalBudget(calculateDefaultBudgetINR(durationDays, newAdults + newChildren, budgetStyle));
                     }}
                     className={`p-4 rounded-2xl border text-center transition-all cursor-pointer ${
                       travelerType === type
@@ -392,7 +484,11 @@ export default function PlannerWizard({
                     <button
                       type="button"
                       disabled={adultsCount <= 1}
-                      onClick={() => setAdultsCount(Math.max(1, adultsCount - 1))}
+                      onClick={() => {
+                        const newAdults = Math.max(1, adultsCount - 1);
+                        setAdultsCount(newAdults);
+                        setTotalBudget(calculateDefaultBudgetINR(durationDays, newAdults + childrenCount, budgetStyle));
+                      }}
                       className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 disabled:opacity-40 cursor-pointer"
                     >
                       -
@@ -400,7 +496,11 @@ export default function PlannerWizard({
                     <span className="w-6 text-center font-bold text-sm">{adultsCount}</span>
                     <button
                       type="button"
-                      onClick={() => setAdultsCount(adultsCount + 1)}
+                      onClick={() => {
+                        const newAdults = adultsCount + 1;
+                        setAdultsCount(newAdults);
+                        setTotalBudget(calculateDefaultBudgetINR(durationDays, newAdults + childrenCount, budgetStyle));
+                      }}
                       className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 cursor-pointer"
                     >
                       +
@@ -417,7 +517,11 @@ export default function PlannerWizard({
                     <button
                       type="button"
                       disabled={childrenCount <= 0}
-                      onClick={() => setChildrenCount(Math.max(0, childrenCount - 1))}
+                      onClick={() => {
+                        const newChildren = Math.max(0, childrenCount - 1);
+                        setChildrenCount(newChildren);
+                        setTotalBudget(calculateDefaultBudgetINR(durationDays, adultsCount + newChildren, budgetStyle));
+                      }}
                       className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 disabled:opacity-40 cursor-pointer"
                     >
                       -
@@ -425,7 +529,11 @@ export default function PlannerWizard({
                     <span className="w-6 text-center font-bold text-sm">{childrenCount}</span>
                     <button
                       type="button"
-                      onClick={() => setChildrenCount(childrenCount + 1)}
+                      onClick={() => {
+                        const newChildren = childrenCount + 1;
+                        setChildrenCount(newChildren);
+                        setTotalBudget(calculateDefaultBudgetINR(durationDays, adultsCount + newChildren, budgetStyle));
+                      }}
                       className="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 cursor-pointer"
                     >
                       +
@@ -444,21 +552,25 @@ export default function PlannerWizard({
                   What is your planned budget?
                 </h4>
                 <p className="text-sm text-[#64748B] mt-1">
-                  Wayfarer AI will optimize dining and activity suggestions to fit comfortably.
+                  Defaulted in Indian Rupee (INR) with balanced itemized allocations.
                 </p>
               </div>
 
               {/* Travel Style Selector */}
               <div className="grid grid-cols-3 gap-3">
                 {[
-                  { id: 'economy', label: 'Economy', desc: 'Hostels, street food & transit' },
-                  { id: 'comfortable', label: 'Comfortable', desc: 'Boutique hotels & balanced dining' },
-                  { id: 'luxury', label: 'Luxury', desc: 'Fine dining & private experiences' }
+                  { id: 'economy', label: 'Economy', desc: 'Hostels, street food & transit (~₹8,000/day)' },
+                  { id: 'comfortable', label: 'Comfortable', desc: 'Boutique hotels & dining (~₹16,000/day)' },
+                  { id: 'luxury', label: 'Luxury', desc: '5-star lodging & fine dining (~₹32,000/day)' }
                 ].map((s) => (
                   <button
                     key={s.id}
                     type="button"
-                    onClick={() => setBudgetStyle(s.id as TravelStyle)}
+                    onClick={() => {
+                      const newStyle = s.id as TravelStyle;
+                      setBudgetStyle(newStyle);
+                      setTotalBudget(calculateDefaultBudgetINR(durationDays, adultsCount + childrenCount, newStyle));
+                    }}
                     className={`p-4 rounded-2xl border text-left transition-all cursor-pointer ${
                       budgetStyle === s.id
                         ? 'border-[#176B52] bg-[#DCE9DF]/40 shadow-2xs'
@@ -479,18 +591,25 @@ export default function PlannerWizard({
               <div className="grid grid-cols-3 gap-3">
                 <div className="col-span-2">
                   <label className="block text-xs font-semibold uppercase tracking-wider text-[#475569] mb-1.5">
-                    Estimated Total Budget
+                    Estimated Total Budget ({currency})
                   </label>
                   <div className="relative">
                     <DollarSign className="absolute left-3.5 top-3.5 w-4 h-4 text-[#176B52]" />
                     <input
                       type="number"
-                      step="50"
+                      step={currency === 'INR' ? '5000' : '50'}
+                      min={currency === 'INR' ? '5000' : '100'}
                       value={totalBudget}
-                      onChange={(e) => setTotalBudget(parseInt(e.target.value, 10) || 1000)}
+                      onChange={(e) => {
+                        setTotalBudget(parseInt(e.target.value, 10) || 0);
+                        setValidationError(null);
+                      }}
                       className="w-full pl-10 pr-4 py-3 rounded-xl border border-[#E5E7EB] bg-white text-sm text-[#101827] focus:ring-2 focus:ring-[#176B52] focus:outline-hidden font-semibold"
                     />
                   </div>
+                  <span className="text-xs text-[#64748B] mt-1 block">
+                    Display: {formatCurrency(totalBudget, currency)}
+                  </span>
                 </div>
 
                 <div>
@@ -499,14 +618,21 @@ export default function PlannerWizard({
                   </label>
                   <select
                     value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
+                    onChange={(e) => {
+                      const newCurr = e.target.value;
+                      setCurrency(newCurr);
+                      if (newCurr !== 'INR' && currency === 'INR') {
+                        setTotalBudget(Math.round(totalBudget / 85));
+                      } else if (newCurr === 'INR' && currency !== 'INR') {
+                        setTotalBudget(Math.round(totalBudget * 85));
+                      }
+                    }}
                     className="w-full px-3 py-3 rounded-xl border border-[#E5E7EB] bg-white text-sm text-[#101827] focus:ring-2 focus:ring-[#176B52] focus:outline-hidden cursor-pointer"
                   >
+                    <option value="INR">INR (₹)</option>
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
                     <option value="GBP">GBP (£)</option>
-                    <option value="JPY">JPY (¥)</option>
-                    <option value="CAD">CAD ($)</option>
                   </select>
                 </div>
               </div>
@@ -600,9 +726,9 @@ export default function PlannerWizard({
                 >
                   <option value="No restrictions">No restrictions</option>
                   <option value="Vegetarian">Vegetarian</option>
+                  <option value="Jain Vegetarian">Jain Vegetarian</option>
                   <option value="Vegan">Vegan</option>
                   <option value="Halal">Halal</option>
-                  <option value="Kosher">Kosher</option>
                   <option value="Gluten-Free">Gluten-Free</option>
                 </select>
               </div>
@@ -689,8 +815,10 @@ export default function PlannerWizard({
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pb-4 border-b border-[#E5E7EB]">
                   <div>
-                    <span className="text-xs uppercase text-[#64748B] font-semibold block">Style</span>
-                    <span className="text-sm font-bold text-[#176B52] capitalize">{budgetStyle} (${totalBudget} {currency})</span>
+                    <span className="text-xs uppercase text-[#64748B] font-semibold block">Style & Budget</span>
+                    <span className="text-sm font-bold text-[#176B52] capitalize">
+                      {budgetStyle} ({formatCurrency(totalBudget, currency)})
+                    </span>
                   </div>
                   <div>
                     <span className="text-xs uppercase text-[#64748B] font-semibold block">Pace</span>
@@ -736,7 +864,10 @@ export default function PlannerWizard({
             <button
               type="button"
               disabled={isGenerating}
-              onClick={() => setCurrentStep(currentStep - 1)}
+              onClick={() => {
+                setValidationError(null);
+                setCurrentStep(currentStep - 1);
+              }}
               className="px-5 py-2.5 rounded-full border border-[#E5E7EB] text-[#475569] text-sm font-medium hover:bg-slate-50 flex items-center gap-1.5 transition-colors disabled:opacity-50 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -755,7 +886,7 @@ export default function PlannerWizard({
           {currentStep < totalSteps ? (
             <button
               type="button"
-              onClick={() => setCurrentStep(currentStep + 1)}
+              onClick={handleNextStep}
               className="px-6 py-2.5 rounded-full bg-[#101827] text-white text-sm font-medium hover:bg-[#1f2937] active:scale-95 transition-all flex items-center gap-1.5 shadow-sm cursor-pointer"
             >
               <span>Continue</span>
@@ -786,4 +917,3 @@ export default function PlannerWizard({
     </div>
   );
 }
-

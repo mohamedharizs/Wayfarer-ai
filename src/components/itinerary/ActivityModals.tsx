@@ -104,7 +104,7 @@ function EditActivityForm({
           />
         </div>
         <div>
-          <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Estimated Cost ($)</label>
+          <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Estimated Cost</label>
           <input
             type="number"
             value={cost}
@@ -316,7 +316,7 @@ export function AddActivityModal({ isOpen, dayNumber, onClose, onAdd }: AddActiv
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Cost ($)</label>
+              <label className="block text-xs font-semibold uppercase text-slate-600 mb-1">Cost</label>
               <input
                 type="number"
                 value={cost}

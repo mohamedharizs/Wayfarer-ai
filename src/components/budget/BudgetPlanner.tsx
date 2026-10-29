@@ -6,6 +6,7 @@ import {
   ShieldAlert, CheckCircle2, Calendar
 } from 'lucide-react';
 import { BudgetBreakdown, ActualExpense } from '@/types/trip';
+import { formatCurrency } from '@/lib/currency';
 
 interface BudgetPlannerProps {
   budget: BudgetBreakdown;
@@ -21,6 +22,8 @@ export default function BudgetPlanner({
   durationDays,
   onAddExpense
 }: BudgetPlannerProps) {
+  const currency = budget?.currency || 'INR';
+
   // New Expense form state
   const [expenseTitle, setExpenseTitle] = useState('');
   const [expenseAmount, setExpenseAmount] = useState('');
@@ -28,10 +31,10 @@ export default function BudgetPlanner({
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().split('T')[0]);
 
   // Calculations
-  const totalActual = actualExpenses.reduce((sum, item) => sum + item.amount, 0);
-  const remainingBudget = budget.totalPlanned - totalActual;
+  const totalActual = actualExpenses.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  const remainingBudget = (budget?.totalPlanned || 0) - totalActual;
   const isOverBudget = remainingBudget < 0;
-  const dailyAverageEstimate = Math.round(budget.totalPlanned / Math.max(1, durationDays));
+  const dailyAverageEstimate = Math.round((budget?.totalPlanned || 0) / Math.max(1, durationDays));
 
   const handleAddExpense = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,13 +55,13 @@ export default function BudgetPlanner({
   };
 
   const categories = [
-    { key: 'flights', label: 'Flights & Intercity Transit', icon: '✈️', planned: budget.flights, color: 'bg-blue-500' },
-    { key: 'accommodation', label: 'Lodging & Stays', icon: '🏨', planned: budget.accommodation, color: 'bg-emerald-500' },
-    { key: 'food', label: 'Dining & Food Experiences', icon: '🍜', planned: budget.food, color: 'bg-amber-500' },
-    { key: 'activities', label: 'Activities & Sightseeing', icon: '🎟️', planned: budget.activities, color: 'bg-purple-500' },
-    { key: 'transportation', label: 'Local Transit & Rides', icon: '🚇', planned: budget.transportation, color: 'bg-teal-500' },
-    { key: 'shopping', label: 'Artisan Goods & Souvenirs', icon: '🛍️', planned: budget.shopping, color: 'bg-pink-500' },
-    { key: 'emergencyBuffer', label: 'Emergency Cushion Buffer', icon: '🛡️', planned: budget.emergencyBuffer, color: 'bg-slate-500' }
+    { key: 'flights', label: 'Flights & Intercity Transit', icon: '✈️', planned: budget?.flights || 0, color: 'bg-blue-500' },
+    { key: 'accommodation', label: 'Lodging & Stays', icon: '🏨', planned: budget?.accommodation || 0, color: 'bg-emerald-500' },
+    { key: 'food', label: 'Dining & Food Experiences', icon: '🍜', planned: budget?.food || 0, color: 'bg-amber-500' },
+    { key: 'activities', label: 'Activities & Sightseeing', icon: '🎟️', planned: budget?.activities || 0, color: 'bg-purple-500' },
+    { key: 'transportation', label: 'Local Transit & Rides', icon: '🚇', planned: budget?.transportation || 0, color: 'bg-teal-500' },
+    { key: 'shopping', label: 'Artisan Goods & Souvenirs', icon: '🛍️', planned: budget?.shopping || 0, color: 'bg-pink-500' },
+    { key: 'emergencyBuffer', label: 'Emergency Cushion Buffer', icon: '🛡️', planned: budget?.emergencyBuffer || 0, color: 'bg-slate-500' }
   ];
 
   return (
@@ -72,10 +75,10 @@ export default function BudgetPlanner({
             <PiggyBank className="w-4 h-4 text-[#176B52]" />
           </div>
           <div className="mt-2 text-2xl font-serif font-bold text-[#101827]">
-            ${budget.totalPlanned.toLocaleString()}
+            {formatCurrency(budget?.totalPlanned, currency)}
           </div>
           <div className="text-xs text-[#64748B] mt-1">
-            Currency: {budget.currency}
+            Currency: {currency}
           </div>
         </div>
 
@@ -86,7 +89,7 @@ export default function BudgetPlanner({
             <TrendingUp className="w-4 h-4 text-blue-600" />
           </div>
           <div className="mt-2 text-2xl font-serif font-bold text-blue-900">
-            ${totalActual.toLocaleString()}
+            {formatCurrency(totalActual, currency)}
           </div>
           <div className="text-xs text-[#64748B] mt-1">
             {actualExpenses.length} entries recorded
@@ -110,7 +113,7 @@ export default function BudgetPlanner({
           <div className={`mt-2 text-2xl font-serif font-bold ${
             isOverBudget ? 'text-rose-900' : 'text-emerald-900'
           }`}>
-            ${Math.abs(remainingBudget).toLocaleString()}
+            {formatCurrency(Math.abs(remainingBudget), currency)}
           </div>
           <div className="text-xs text-[#64748B] mt-1">
             {isOverBudget ? 'Budget threshold exceeded' : 'Within comfortable targets'}
@@ -124,7 +127,7 @@ export default function BudgetPlanner({
             <Calendar className="w-4 h-4 text-[#D6AD60]" />
           </div>
           <div className="mt-2 text-2xl font-serif font-bold text-[#101827]">
-            ${dailyAverageEstimate}
+            {formatCurrency(dailyAverageEstimate, currency)}
             <span className="text-sm font-sans font-normal text-[#64748B]">/day</span>
           </div>
           <div className="text-xs text-[#64748B] mt-1">
@@ -148,8 +151,9 @@ export default function BudgetPlanner({
           {categories.map((cat) => {
             const actualForCat = actualExpenses
               .filter(e => e.category === cat.key)
-              .reduce((s, e) => s + e.amount, 0);
-            const pct = Math.min(100, Math.round((cat.planned / budget.totalPlanned) * 100));
+              .reduce((s, e) => s + (Number(e.amount) || 0), 0);
+            const totalPlannedSafe = budget?.totalPlanned || 1;
+            const pct = Math.min(100, Math.round((cat.planned / totalPlannedSafe) * 100));
 
             return (
               <div key={cat.key} className="space-y-1.5">
@@ -159,10 +163,12 @@ export default function BudgetPlanner({
                     <span className="font-semibold text-[#101827]">{cat.label}</span>
                   </div>
                   <div className="text-right">
-                    <span className="font-bold text-[#101827]">${cat.planned.toLocaleString()}</span>
+                    <span className="font-bold text-[#101827]">
+                      {formatCurrency(cat.planned, currency)}
+                    </span>
                     {actualForCat > 0 && (
                       <span className="text-[#64748B] ml-2">
-                        (${actualForCat} spent)
+                        ({formatCurrency(actualForCat, currency)} spent)
                       </span>
                     )}
                     <span className="text-slate-400 text-[11px] ml-1">({pct}%)</span>
@@ -209,14 +215,15 @@ export default function BudgetPlanner({
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="block uppercase font-semibold text-[#64748B] mb-1">
-                  Amount ($) *
+                  Amount ({currency === 'INR' ? '₹' : currency}) *
                 </label>
                 <input
                   type="number"
-                  step="0.01"
+                  step="1"
+                  min="1"
                   value={expenseAmount}
                   onChange={(e) => setExpenseAmount(e.target.value)}
-                  placeholder="85.00"
+                  placeholder={currency === 'INR' ? '2500' : '85.00'}
                   className="w-full px-3 py-2 border rounded-xl text-sm"
                   required
                 />
@@ -270,7 +277,7 @@ export default function BudgetPlanner({
               Tracked Actual Expenses ({actualExpenses.length})
             </h4>
             <span className="text-xs font-bold text-[#176B52]">
-              Total: ${totalActual}
+              Total: {formatCurrency(totalActual, currency)}
             </span>
           </div>
 
@@ -294,7 +301,7 @@ export default function BudgetPlanner({
                     </span>
                   </div>
                   <span className="font-serif font-bold text-[#101827] text-sm">
-                    ${exp.amount.toFixed(2)}
+                    {formatCurrency(exp.amount, currency)}
                   </span>
                 </div>
               ))}
@@ -305,4 +312,3 @@ export default function BudgetPlanner({
     </div>
   );
 }
-

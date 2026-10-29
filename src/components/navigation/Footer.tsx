@@ -60,7 +60,7 @@ export default function Footer() {
               Cost figures and timing shown across Wayfarer AI are curated estimates derived from regional averages and travel databases. Always verify seasonal opening hours and ticket availability prior to departure.
             </p>
             <div className="pt-2 text-xs text-[#64748B]">
-              Standard Currency: USD ($) · Lat/Lng Geo-coordinated
+              Standard Currency: INR (₹) · Multi-currency Supported · Lat/Lng Geo-coordinated
             </div>
           </div>
         </div>

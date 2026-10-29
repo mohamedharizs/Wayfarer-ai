@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { Search, MapPin, Sparkles, Filter, X, RotateCcw } from 'lucide-react';
 import { CURATED_DESTINATIONS } from '@/data/destinations';
 import { Destination } from '@/types/trip';
+import { formatCurrency } from '@/lib/currency';
 
 interface DestinationDiscoveryProps {
   onPlanDestination: (dest: Destination) => void;
@@ -218,7 +219,7 @@ export default function DestinationDiscovery({ onPlanDestination }: DestinationD
                   <div>
                     <span className="text-xs text-[#64748B] block">Avg. Daily Budget</span>
                     <span className="text-sm font-bold text-[#101827]">
-                      ${dest.avgDailyBudget} / day
+                      {formatCurrency(dest.avgDailyBudget, dest.currency || 'INR')} / day
                     </span>
                   </div>
 

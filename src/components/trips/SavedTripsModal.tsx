@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, Trash2, Copy, Sparkles, Bookmark } from 'lucide-react';
 import { Trip } from '@/types/trip';
+import { formatCurrency } from '@/lib/currency';
 
 interface SavedTripsModalProps {
   isOpen: boolean;
@@ -102,7 +103,7 @@ export default function SavedTripsModal({
                     <p className="text-xs text-[#64748B] flex items-center gap-2">
                       <span>{trip.destination}</span>
                       <span>·</span>
-                      <span>Budget: ${trip.budget?.totalPlanned || 0}</span>
+                      <span>Budget: {formatCurrency(trip.budget?.totalPlanned, trip.budget?.currency || 'INR')}</span>
                       <span>·</span>
                       <span>{trip.days?.length || 0} Days Planned</span>
                     </p>

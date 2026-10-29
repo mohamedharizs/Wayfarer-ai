@@ -1,4 +1,4 @@
-import { Trip, TripPreferences, ItineraryDay, Activity, BudgetBreakdown } from '../types/trip';
+import type { Trip, TripPreferences, ItineraryDay, Activity, BudgetBreakdown } from '../types/trip';
 
 // Destination presets with coordinates and localized highlights
 const DESTINATION_INFO: Record<string, { lat: number; lng: number; country: string; image: string }> = {
@@ -23,7 +23,6 @@ export function getDestinationGeo(dest: string) {
       return val;
     }
   }
-  // Default to Paris / scenic if unspecified
   return {
     lat: 48.8566,
     lng: 2.3522,
@@ -36,25 +35,32 @@ export function generateStructuredItinerary(prefs: TripPreferences): Trip {
   const geo = getDestinationGeo(prefs.destination);
   const duration = Math.max(1, Math.min(prefs.durationDays || 4, 14));
   const budgetMultiplier = prefs.budgetStyle === 'luxury' ? 1.8 : prefs.budgetStyle === 'economy' ? 0.7 : 1.0;
-  const travelersTotal = (prefs.adultsCount || 1) + (prefs.childrenCount || 0);
+  const travelersTotal = Math.max(1, (prefs.adultsCount || 1) + (prefs.childrenCount || 0));
+  const currency = prefs.currency || 'INR';
 
-  const totalBudget = prefs.totalBudget || (duration * 200 * budgetMultiplier * travelersTotal);
-  
-  // Calculate category budget breakdown
+  // Base daily per person depending on currency
+  const baseDailyPerPerson = currency === 'INR' ? 16000 : 200;
+  const calculatedTotalBudget = prefs.totalBudget && prefs.totalBudget > 0
+    ? prefs.totalBudget
+    : Math.round(duration * baseDailyPerPerson * budgetMultiplier * travelersTotal);
+
+  // Calculate category budget breakdown (percentages sum to 100%)
   const budget: BudgetBreakdown = {
-    flights: Math.round(totalBudget * 0.32),
-    accommodation: Math.round(totalBudget * 0.30),
-    food: Math.round(totalBudget * 0.18),
-    transportation: Math.round(totalBudget * 0.06),
-    activities: Math.round(totalBudget * 0.08),
-    shopping: Math.round(totalBudget * 0.03),
-    emergencyBuffer: Math.round(totalBudget * 0.03),
-    totalPlanned: Math.round(totalBudget),
-    currency: prefs.currency || 'USD'
+    flights: Math.round(calculatedTotalBudget * 0.35),
+    accommodation: Math.round(calculatedTotalBudget * 0.32),
+    food: Math.round(calculatedTotalBudget * 0.17),
+    transportation: Math.round(calculatedTotalBudget * 0.05),
+    activities: Math.round(calculatedTotalBudget * 0.06),
+    shopping: Math.round(calculatedTotalBudget * 0.03),
+    emergencyBuffer: Math.round(calculatedTotalBudget * 0.02),
+    totalPlanned: Math.round(calculatedTotalBudget),
+    currency
   };
 
   const days: ItineraryDay[] = [];
-  const primaryInterests = prefs.interests && prefs.interests.length > 0 ? prefs.interests : ['Culture & History', 'Food & Local Cuisine', 'Sightseeing'];
+  const primaryInterests = prefs.interests && prefs.interests.length > 0
+    ? prefs.interests
+    : ['Culture & History', 'Food & Local Cuisine', 'Sightseeing'];
 
   for (let d = 1; d <= duration; d++) {
     const dayTheme = primaryInterests[(d - 1) % primaryInterests.length] || 'Discovery & Exploration';
@@ -104,6 +110,21 @@ export function generateSingleDay(
   const centerLat = geo.lat + latOffset;
   const centerLng = geo.lng + lngOffset;
 
+  const isINR = (prefs.currency || 'INR') === 'INR';
+
+  // Cost tiers adapted to currency
+  const sightCost = isINR
+    ? (prefs.budgetStyle === 'luxury' ? 3200 : prefs.budgetStyle === 'economy' ? 600 : 1500)
+    : (prefs.budgetStyle === 'luxury' ? 45 : prefs.budgetStyle === 'economy' ? 10 : 20);
+
+  const lunchCost = isINR
+    ? (prefs.budgetStyle === 'luxury' ? 4800 : prefs.budgetStyle === 'economy' ? 900 : 2200)
+    : (prefs.budgetStyle === 'luxury' ? 65 : prefs.budgetStyle === 'economy' ? 12 : 28);
+
+  const dinnerCost = isINR
+    ? (prefs.budgetStyle === 'luxury' ? 8500 : prefs.budgetStyle === 'economy' ? 1600 : 3600)
+    : (prefs.budgetStyle === 'luxury' ? 110 : prefs.budgetStyle === 'economy' ? 22 : 45);
+
   const activities: Activity[] = [
     {
       id: `act-${dayNumber}-1`,
@@ -113,7 +134,7 @@ export function generateSingleDay(
       category: 'Sightseeing',
       description: `Explore the premier cultural landmark associated with ${prefs.destination}. Take advantage of morning serenity and soft lighting.`,
       duration: '2.5 hrs',
-      estimatedCost: prefs.budgetStyle === 'luxury' ? 45 : 20,
+      estimatedCost: sightCost,
       location: {
         name: `Historic Quarter & Landmark Plaza, ${prefs.destination}`,
         lat: centerLat + 0.005,
@@ -130,7 +151,7 @@ export function generateSingleDay(
       category: 'Food',
       description: `Savor seasonal dishes highlighting local specialties. Recommended: house-made specialties and regional beverages.`,
       duration: '1.5 hrs',
-      estimatedCost: prefs.budgetStyle === 'luxury' ? 65 : 28,
+      estimatedCost: lunchCost,
       location: {
         name: `Old Town Artisan Bistro, ${prefs.destination}`,
         lat: centerLat - 0.003,
@@ -164,7 +185,7 @@ export function generateSingleDay(
       category: 'Food',
       description: `Unwind with an evening meal accompanied by panoramic views as the city lights turn on.`,
       duration: '2.5 hrs',
-      estimatedCost: prefs.budgetStyle === 'luxury' ? 110 : 45,
+      estimatedCost: dinnerCost,
       location: {
         name: `Panoramic Terrace Lounge, ${prefs.destination}`,
         lat: centerLat - 0.007,
@@ -176,7 +197,7 @@ export function generateSingleDay(
     }
   ];
 
-  const dailyEstimatedCost = activities.reduce((sum, a) => sum + a.estimatedCost, 0);
+  const dailyEstimatedCost = activities.reduce((sum, a) => sum + (Number(a.estimatedCost) || 0), 0);
 
   return {
     dayNumber,
@@ -187,4 +208,3 @@ export function generateSingleDay(
     activities
   };
 }
-

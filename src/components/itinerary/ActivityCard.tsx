@@ -7,9 +7,11 @@ import {
   Coffee, Sun, Moon
 } from 'lucide-react';
 import { Activity, ActivityCategory } from '@/types/trip';
+import { formatCurrency } from '@/lib/currency';
 
 interface ActivityCardProps {
   activity: Activity;
+  currency?: string;
   isFirst: boolean;
   isLast: boolean;
   onToggleComplete: () => void;
@@ -33,6 +35,7 @@ const CATEGORY_COLORS: Record<ActivityCategory, { bg: string; text: string; bord
 
 export default function ActivityCard({
   activity,
+  currency = 'INR',
   isFirst,
   isLast,
   onToggleComplete,
@@ -154,7 +157,7 @@ export default function ActivityCard({
                 Est. Cost
               </span>
               <span className="text-sm font-bold text-[#101827]">
-                {activity.estimatedCost > 0 ? `$${activity.estimatedCost}` : 'Free'}
+                {activity.estimatedCost > 0 ? formatCurrency(activity.estimatedCost, currency) : 'Free'}
               </span>
             </div>
 

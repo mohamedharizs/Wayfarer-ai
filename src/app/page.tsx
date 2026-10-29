@@ -29,7 +29,7 @@ import {
 const FAQ_ITEMS = [
   {
     q: 'How does Wayfarer AI estimate trip budgets?',
-    a: 'Wayfarer AI models realistic expenditure using localized cost indices for lodging, regional dining, and ticket admissions. Calculations adapt dynamically to your selected travel style (Economy, Comfortable, or Luxury) and traveler headcount.'
+    a: 'Wayfarer AI models realistic expenditure using localized cost indices for lodging, regional dining, and ticket admissions. Calculations default to Indian Rupee (INR) and adapt dynamically to your selected travel style (Economy, Comfortable, or Luxury) and traveler headcount.'
   },
   {
     q: 'Can I regenerate or swap out individual days without starting over?',

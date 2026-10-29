@@ -3,8 +3,44 @@
 import { Trip, Activity, ActualExpense } from '../types/trip';
 import { SAMPLE_TRIPS } from '../data/sampleTrips';
 
-const TRIPS_STORAGE_KEY = 'wayfarer_saved_trips';
-const ACTIVE_TRIP_KEY = 'wayfarer_active_trip_id';
+const TRIPS_STORAGE_KEY = 'wayfarer_saved_trips_v2';
+const ACTIVE_TRIP_KEY = 'wayfarer_active_trip_id_v2';
+
+/**
+ * Helper to recalculate daily activity costs and aggregate trip activities budget
+ */
+function recalculateTripBudgets(trip: Trip): Trip {
+  let totalActivitiesCost = 0;
+
+  const updatedDays = trip.days.map(day => {
+    const dailyTotal = day.activities.reduce((sum, a) => sum + (Number(a.estimatedCost) || 0), 0);
+    totalActivitiesCost += dailyTotal;
+    return {
+      ...day,
+      dailyEstimatedCost: dailyTotal
+    };
+  });
+
+  const updatedBudget = {
+    ...trip.budget,
+    activities: totalActivitiesCost,
+    // Recalculate total planned to match components if activities changed
+    totalPlanned: (trip.budget.flights || 0) +
+      (trip.budget.accommodation || 0) +
+      (trip.budget.food || 0) +
+      (trip.budget.transportation || 0) +
+      totalActivitiesCost +
+      (trip.budget.shopping || 0) +
+      (trip.budget.emergencyBuffer || 0)
+  };
+
+  return {
+    ...trip,
+    days: updatedDays,
+    budget: updatedBudget,
+    updatedAt: new Date().toISOString()
+  };
+}
 
 export function getSavedTrips(): Trip[] {
   if (typeof window === 'undefined') return SAMPLE_TRIPS;
@@ -100,8 +136,9 @@ export function updateActivity(tripId: string, dayNumber: number, updatedActivit
   if (idx === -1) return null;
 
   day.activities[idx] = updatedActivity;
-  saveTrip(trip);
-  return trip;
+  const recalculated = recalculateTripBudgets(trip);
+  saveTrip(recalculated);
+  return recalculated;
 }
 
 export function deleteActivity(tripId: string, dayNumber: number, activityId: string): Trip | null {
@@ -113,8 +150,9 @@ export function deleteActivity(tripId: string, dayNumber: number, activityId: st
   if (!day) return null;
 
   day.activities = day.activities.filter(a => a.id !== activityId);
-  saveTrip(trip);
-  return trip;
+  const recalculated = recalculateTripBudgets(trip);
+  saveTrip(recalculated);
+  return recalculated;
 }
 
 export function addCustomActivity(tripId: string, dayNumber: number, activity: Activity): Trip | null {
@@ -126,8 +164,9 @@ export function addCustomActivity(tripId: string, dayNumber: number, activity: A
   if (!day) return null;
 
   day.activities.push(activity);
-  saveTrip(trip);
-  return trip;
+  const recalculated = recalculateTripBudgets(trip);
+  saveTrip(recalculated);
+  return recalculated;
 }
 
 export function addActualExpense(tripId: string, expense: ActualExpense): Trip | null {
@@ -140,4 +179,3 @@ export function addActualExpense(tripId: string, expense: ActualExpense): Trip |
   saveTrip(trip);
   return trip;
 }
-
